@@ -1,4 +1,4 @@
-# DOI Access Links - Firefox Extension
+# ScholarKey
 
 A customizable Firefox extension that adds quick access links to academic papers via their DOI (Digital Object Identifier).
 
