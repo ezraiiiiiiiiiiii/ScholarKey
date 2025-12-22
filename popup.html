@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ScholarKey Configuration</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      width: 500px;
+      min-height: 400px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      color: #2d3748;
+      padding: 0;
+    }
+    
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px 24px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+    
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1a202c;
+      margin-bottom: 6px;
+    }
+    
+    .help-text {
+      font-size: 13px;
+      color: #718096;
+      line-height: 1.5;
+    }
+    
+    .help-text code {
+      background: #edf2f7;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+      font-family: 'Monaco', 'Courier New', monospace;
+    }
+    
+    .content {
+      padding: 20px 24px;
+      max-height: 450px;
+      overflow-y: auto;
+    }
+    
+    .content::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .content::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .content::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 4px;
+    }
+    
+    .content::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+    
+    .source-item {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s ease;
+    }
+    
+    .source-item:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
+    }
+    
+    .source-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #cbd5e0;
+      transition: .3s;
+      border-radius: 24px;
+    }
+    
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+    
+    .emoji-input {
+      width: 48px;
+      height: 48px;
+      text-align: center;
+      font-size: 24px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      background: #f7fafc;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+    
+    .emoji-input:focus {
+      outline: none;
+      border-color: #667eea;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .source-info {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .name-input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      transition: all 0.2s ease;
+    }
+    
+    .name-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .url-input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      transition: all 0.2s ease;
+    }
+    
+    .url-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .source-controls {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    
+    .control-btn {
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 8px;
+      background: #f7fafc;
+      color: #4a5568;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+    
+    .control-btn:hover:not(:disabled) {
+      background: #edf2f7;
+      color: #2d3748;
+    }
+    
+    .control-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    
+    .control-btn.delete {
+      background: #fff5f5;
+      color: #e53e3e;
+    }
+    
+    .control-btn.delete:hover {
+      background: #fed7d7;
+      color: #c53030;
+    }
+    
+    .add-button {
+      width: 100%;
+      padding: 14px;
+      background: white;
+      color: #667eea;
+      border: 2px dashed rgba(255, 255, 255, 0.4);
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-top: 8px;
+    }
+    
+    .add-button:hover {
+      background: rgba(255, 255, 255, 0.95);
+      border-color: rgba(255, 255, 255, 0.8);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: white;
+    }
+    
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+      opacity: 0.8;
+    }
+    
+    .empty-state-text {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2>ScholarKey Configuration</h2>
+    <div class="help-text">
+      Use <code>EXAMPLE_DOI</code> in search URLs as a placeholder for the DOI
+    </div>
+  </div>
+  
+  <div class="content">
+    <div id="sources-container"></div>
+    <button id="add-source" class="add-button">+ Add Database</button>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
