@@ -2,7 +2,7 @@
 
 A customizable Firefox extension that adds quick access links to academic papers via their DOI (Digital Object Identifier).
 
-[**Install here**](https://addons.mozilla.org/en-GB/firefox/addon/scholarkey/)!
+[**Install here**]([url](https://addons.mozilla.org/en-GB/firefox/addon/scholarkey/))!
 
 ## Features
 
