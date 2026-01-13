@@ -4,7 +4,7 @@ const defaultSources = [
     id: 'annas_search',
     name: "Anna's Archive Search",
     emoji: '📖',
-    urlTemplate: 'https://annas-archive.org/search?q=EXAMPLE_DOI',
+    urlTemplate: 'https://annas-archive.li/search?q=EXAMPLE_DOI',
     enabled: true,
     order: 0
   },
@@ -12,7 +12,7 @@ const defaultSources = [
     id: 'annas_scidb',
     name: "Anna's Archive SciDB",
     emoji: '🧬',
-    urlTemplate: 'https://annas-archive.org/scidb/EXAMPLE_DOI',
+    urlTemplate: 'https://annas-archive.li/scidb/EXAMPLE_DOI',
     enabled: true,
     order: 1
   },
@@ -20,7 +20,7 @@ const defaultSources = [
     id: 'scihub',
     name: "Sci-Hub",
     emoji: '🐦',
-    urlTemplate: 'https://sci-hub.ru/EXAMPLE_DOI',
+    urlTemplate: 'https://sci-hub.st/EXAMPLE_DOI',
     enabled: true,
     order: 2
   }
