@@ -1,33 +1,44 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "ScholarKey",
-  "version": "1.0",
-  "description": "Add customizable access links for DOIs",
+  "version": "3.0",
+  "description": "Next to every DOI on the web: Wikipedia citation count and configurable access links.",
   "permissions": [
     "storage"
   ],
-  "content_scripts": [
-    {
-      "matches": ["*://*/*"],
-      "js": ["content.js"],
-      "run_at": "document_end"
-    }
+  "host_permissions": [
+    "<all_urls>"
   ],
-  "browser_action": {
+  "action": {
+    "default_title": "ScholarKey settings",
     "default_popup": "popup.html",
     "default_icon": {
-      "128": "icon_128.png"
+      "48": "icons/icon_48.png",
+      "128": "icons/icon_128.png"
     }
   },
   "icons": {
-    "128": "icon_128.png"
+    "48": "icons/icon_48.png",
+    "128": "icons/icon_128.png"
   },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
   "browser_specific_settings": {
     "gecko": {
       "id": "scholarkey@firefox",
-      "data_collection_permissions": {
-        "required": ["none"]
-      }
+      "strict_min_version": "112.0"
     }
   }
 }
