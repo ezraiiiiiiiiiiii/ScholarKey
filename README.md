@@ -2,7 +2,7 @@
 
 A Firefox extension that automatically loads shadow library and institutional access links beside any DOI on the web. Also shows number of Wikipedia citations.
 
-[**Install here**]([url](https://addons.mozilla.org/en-GB/firefox/addon/scholarkey/))!
+[**Install here**](https://addons.mozilla.org/en-GB/firefox/addon/scholarkey/)!
 
 ## Usage
 
