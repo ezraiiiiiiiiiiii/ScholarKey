@@ -1,179 +1,320 @@
-let sources = [];
+/**
+ * popup.js — settings UI logic
+ */
+(function () {
+  "use strict";
 
-async function loadSources() {
-  const result = await browser.storage.local.get('doiSources');
-  if (result.doiSources) {
-    sources = result.doiSources;
+  const KEY = "scholarkey_settings";
+  const api = (typeof browser !== "undefined" ? browser : chrome).storage.local;
+
+  const els = {
+    wikiLang:       document.getElementById("wiki-lang"),
+    showBadge:      document.getElementById("show-badge"),
+    scanBare:       document.getElementById("scan-bare"),
+    sources:        document.getElementById("sources"),
+    addSource:      document.getElementById("add-source"),
+    addInstitution: document.getElementById("add-institution"),
+    refreshUrls:    document.getElementById("refresh-urls"),
+    refreshStatus:  document.getElementById("refresh-status"),
+    reset:          document.getElementById("reset"),
+    status:         document.getElementById("status"),
+  };
+
+  let state = structuredClone(self.DEFAULT_SETTINGS);
+  let saveTimer = null;
+
+  function load() {
+    return api.get([KEY]).then((res) => {
+      const stored = res?.[KEY];
+      if (stored) {
+        state = {
+          ...self.DEFAULT_SETTINGS,
+          ...stored,
+          wikipedia: { ...self.DEFAULT_SETTINGS.wikipedia, ...(stored.wikipedia || {}) },
+          behaviour: { ...self.DEFAULT_SETTINGS.behaviour, ...(stored.behaviour || {}) },
+          sources: Array.isArray(stored.sources) && stored.sources.length
+            ? stored.sources : self.DEFAULT_SETTINGS.sources
+        };
+      }
+    });
   }
-  renderSources();
-}
 
-async function saveSources() {
-  await browser.storage.local.set({ doiSources: sources });
-}
-
-function renderSources() {
-  const container = document.getElementById('sources-container');
-  container.innerHTML = '';
-  
-  sources.sort((a, b) => a.order - b.order);
-  
-  if (sources.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">📚</div>
-        <div class="empty-state-text">No sources configured yet. Add your first one!</div>
-      </div>
-    `;
-    return;
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      api.set({ [KEY]: state }).then(() => flash("Saved", els.status));
+    }, 150);
   }
-  
-  sources.forEach((source, index) => {
-    const item = document.createElement('div');
-    item.className = 'source-item';
-    
-    // Header section with toggle and emoji
-    const header = document.createElement('div');
-    header.className = 'source-header';
-    
-    // Toggle switch
-    const toggleLabel = document.createElement('label');
-    toggleLabel.className = 'toggle-switch';
-    
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.checked = source.enabled;
-    checkbox.addEventListener('change', () => {
-      source.enabled = checkbox.checked;
-      saveSources();
-    });
-    
-    const slider = document.createElement('span');
-    slider.className = 'slider';
-    
-    toggleLabel.appendChild(checkbox);
-    toggleLabel.appendChild(slider);
-    
-    // Emoji input
-    const emojiInput = document.createElement('input');
-    emojiInput.type = 'text';
-    emojiInput.className = 'emoji-input';
-    emojiInput.value = source.emoji;
-    emojiInput.maxLength = 2;
-    emojiInput.addEventListener('input', () => {
-      source.emoji = emojiInput.value;
-      saveSources();
-    });
-    
-    // Info section
-    const infoDiv = document.createElement('div');
-    infoDiv.className = 'source-info';
-    
-    // Name input
-    const nameInput = document.createElement('input');
-    nameInput.type = 'text';
-    nameInput.className = 'name-input';
-    nameInput.value = source.name;
-    nameInput.placeholder = 'Source name';
-    nameInput.addEventListener('input', () => {
-      source.name = nameInput.value;
-      saveSources();
-    });
-    
-    // URL input
-    const urlInput = document.createElement('input');
-    urlInput.type = 'text';
-    urlInput.className = 'url-input';
-    urlInput.value = source.urlTemplate;
-    urlInput.placeholder = 'https://example.com/search?q=EXAMPLE_DOI';
-    urlInput.addEventListener('input', () => {
-      source.urlTemplate = urlInput.value;
-      saveSources();
-    });
-    
-    infoDiv.appendChild(nameInput);
-    infoDiv.appendChild(urlInput);
-    
-    // Controls section
-    const controls = document.createElement('div');
-    controls.className = 'source-controls';
-    
-    const upBtn = document.createElement('button');
-    upBtn.className = 'control-btn';
-    upBtn.innerHTML = '▲';
-    upBtn.title = 'Move up';
-    upBtn.disabled = index === 0;
-    upBtn.addEventListener('click', () => moveSource(index, -1));
-    
-    const downBtn = document.createElement('button');
-    downBtn.className = 'control-btn';
-    downBtn.innerHTML = '▼';
-    downBtn.title = 'Move down';
-    downBtn.disabled = index === sources.length - 1;
-    downBtn.addEventListener('click', () => moveSource(index, 1));
-    
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'control-btn delete';
-    deleteBtn.innerHTML = '✕';
-    deleteBtn.title = 'Delete';
-    deleteBtn.addEventListener('click', () => deleteSource(index));
-    
-    controls.appendChild(upBtn);
-    controls.appendChild(downBtn);
-    controls.appendChild(deleteBtn);
-    
-    header.appendChild(toggleLabel);
-    header.appendChild(emojiInput);
-    header.appendChild(infoDiv);
-    header.appendChild(controls);
-    
-    item.appendChild(header);
-    container.appendChild(item);
-  });
-}
 
-function moveSource(index, direction) {
-  const newIndex = index + direction;
-  if (newIndex < 0 || newIndex >= sources.length) return;
-  
-  // Swap orders
-  const temp = sources[index].order;
-  sources[index].order = sources[newIndex].order;
-  sources[newIndex].order = temp;
-  
-  // Swap positions in array
-  [sources[index], sources[newIndex]] = [sources[newIndex], sources[index]];
-  
-  saveSources();
-  renderSources();
-}
+  function flash(msg, el) {
+    el.textContent = msg;
+    el.classList.add("status--show");
+    setTimeout(() => el.classList.remove("status--show"), 2000);
+  }
 
-function deleteSource(index) {
-  if (confirm('Delete this source?')) {
-    sources.splice(index, 1);
-    // Reorder remaining sources
-    sources.forEach((source, i) => {
-      source.order = i;
-    });
-    saveSources();
+  // ── URL refresh from Wikipedia wikitext ───────────────────────────────────────
+
+  async function fetchFirstUrlFromWikitext(title) {
+    const apiUrl = "https://en.wikipedia.org/w/api.php" +
+      "?action=query&titles=" + encodeURIComponent(title) +
+      "&prop=revisions&rvprop=content&rvslots=main&format=json&origin=*";
+    const res      = await fetch(apiUrl);
+    const json     = await res.json();
+    const pages    = json?.query?.pages ?? {};
+    const wikitext = Object.values(pages)[0]?.revisions?.[0]?.slots?.main?.["*"] ?? "";
+    const urlBlock = wikitext.match(/\|\s*url\s*=\s*([\s\S]*?)(?=\n\s*\||}})/i);
+    if (!urlBlock) return null;
+    const urlMatch = urlBlock[1].match(/https?:\/\/[^\s\]\[}{|<>"]+/);
+    return urlMatch ? urlMatch[0].replace(/\/$/, "") : null;
+  }
+
+  async function refreshUrls() {
+    els.refreshUrls.disabled = true;
+    els.refreshStatus.textContent = "Fetching…";
+    els.refreshStatus.classList.add("status--show");
+    try {
+      const [annasUrl, scihubUrl] = await Promise.all([
+        fetchFirstUrlFromWikitext("Anna's Archive"),
+        fetchFirstUrlFromWikitext("Sci-Hub")
+      ]);
+      for (let i = 0; i < state.sources.length; i++) {
+        const src = state.sources[i];
+        if (src.id === "annas-search" && annasUrl)
+          state.sources[i].url = annasUrl + "/search?q={DOI}";
+        if (src.id === "scihub-scidb") {
+          state.sources[i].url  = JSON.stringify([
+            (scihubUrl  || "https://sci-hub.ru")        + "/{DOI}",
+            (annasUrl   || "https://annas-archive.gl")  + "/scidb/{DOI}"
+          ]);
+          state.sources[i].type = "multi";
+        }
+      }
+      save();
+      renderSources();
+      const parts = [];
+      if (annasUrl)  parts.push("Anna's → " + annasUrl);
+      if (scihubUrl) parts.push("Sci-Hub → " + scihubUrl);
+      els.refreshStatus.textContent = parts.length ? "Updated: " + parts.join(", ") : "No URLs found";
+      els.refreshStatus.classList.add("status--show");
+    } catch (e) {
+      els.refreshStatus.textContent = "Error: " + e.message;
+      els.refreshStatus.classList.add("status--show");
+    } finally {
+      els.refreshUrls.disabled = false;
+      setTimeout(() => els.refreshStatus.classList.remove("status--show"), 5000);
+    }
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────────────
+
+  function eduDomain(url) {
+    // Extract the x.edu domain from a proxy URL, e.g.
+    // "https://libproxy.mit.edu/..." → "mit.edu"
+    const m = url.match(/([a-z0-9-]+\.edu)/i);
+    return m ? m[1].toLowerCase() : null;
+  }
+
+  function faviconUrl(domain) {
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+  }
+
+  function render() {
+    els.wikiLang.value    = state.wikipedia.lang;
+    els.showBadge.checked = state.wikipedia.showBadge !== false;
+    els.scanBare.checked = state.behaviour.scanBareText;
     renderSources();
   }
-}
 
-function addSource() {
-  const newSource = {
-    id: 'custom_' + Date.now(),
-    name: 'New Source',
-    emoji: '🔗',
-    urlTemplate: 'https://example.com/search?q=EXAMPLE_DOI',
-    enabled: true,
-    order: sources.length
-  };
-  sources.push(newSource);
-  saveSources();
-  renderSources();
-}
+  function renderSources() {
+    els.sources.innerHTML = "";
+    state.sources.forEach((src, idx) => {
+      const isMulti = src.type === "multi";
+      let displayUrl = src.url;
+      if (isMulti) {
+        try { displayUrl = JSON.parse(src.url).join("\n"); } catch (_) {}
+      }
 
-document.getElementById('add-source').addEventListener('click', addSource);
+      const li = document.createElement("li");
+      li.className = "src" + (src.enabled ? "" : " src--off");
+      li.draggable = false;
 
-loadSources();
+      li.innerHTML = `
+        <span class="src__handle" title="Drag to reorder">⋮⋮</span>
+        <input type="checkbox" class="src__on" ${src.enabled ? "checked" : ""}
+               aria-label="Enable ${escapeHtml(src.name)}">
+        ${(function() {
+          const edu = eduDomain(isMulti ? (JSON.parse(src.url || "[]")[0] || "") : src.url);
+          if (edu) {
+            return `<img class="src__favicon" src="${faviconUrl(edu)}" alt="" title="${edu}" width="16" height="16">`;
+          }
+          return `<input type="text" class="src__emoji" value="${escapeHtml(src.emoji)}" maxlength="4" aria-label="Emoji">`;
+        })()}
+        <input type="text" class="src__name"  value="${escapeHtml(src.name)}"  aria-label="Name">
+        <div class="src__url-cell">
+          <${isMulti ? "textarea" : `input type="text"`} class="src__url" aria-label="URL template"
+            placeholder="${isMulti ? "One URL per line. Use {DOI} or {DOI_URL}" : "Use {DOI} or {DOI_URL}"}"
+            spellcheck="false"${isMulti ? "" : ` value="${escapeHtml(displayUrl)}"`}
+          >${isMulti ? escapeHtml(displayUrl) : ""}</${isMulti ? "textarea" : "input"}>
+          ${isMulti ? `<span class="src__multi-badge">multi</span>` : ""}
+        </div>
+        <button type="button" class="src__del" title="Delete">✕</button>
+      `;
+
+      const handle = li.querySelector(".src__handle");
+      handle.addEventListener("pointerdown", () => { li.draggable = true; });
+      li.addEventListener("dragend",  () => { li.draggable = false; li.classList.remove("src--dragging"); });
+      li.addEventListener("dragstart", (e) => { e.dataTransfer.setData("text/plain", String(idx)); li.classList.add("src--dragging"); });
+      li.addEventListener("dragover",  (e) => { e.preventDefault(); li.classList.add("src--over"); });
+      li.addEventListener("dragleave", ()  => li.classList.remove("src--over"));
+      li.addEventListener("drop", (e) => {
+        e.preventDefault();
+        li.classList.remove("src--over");
+        const from = Number(e.dataTransfer.getData("text/plain"));
+        if (from === idx || isNaN(from)) return;
+        const [moved] = state.sources.splice(from, 1);
+        state.sources.splice(idx, 0, moved);
+        save(); renderSources();
+      });
+
+      li.querySelector(".src__on").addEventListener("change", (e) => {
+        state.sources[idx].enabled = e.target.checked;
+        li.classList.toggle("src--off", !e.target.checked);
+        save();
+      });
+      const emojiEl = li.querySelector(".src__emoji");
+      if (emojiEl) emojiEl.addEventListener("input", (e) => { state.sources[idx].emoji = e.target.value; save(); });
+      li.querySelector(".src__name") .addEventListener("input", (e) => { state.sources[idx].name  = e.target.value; save(); });
+      li.querySelector(".src__url")  .addEventListener("input", (e) => {
+        if (isMulti) {
+          const lines = e.target.value.split("\n").map(s => s.trim()).filter(Boolean);
+          state.sources[idx].url = JSON.stringify(lines);
+        } else {
+          state.sources[idx].url = e.target.value;
+        }
+        save();
+      });
+      li.querySelector(".src__del").addEventListener("click", () => {
+        state.sources.splice(idx, 1); save(); renderSources();
+      });
+
+      els.sources.appendChild(li);
+    });
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  // ── Institution proxy search ──────────────────────────────────────────────────
+
+  const PROXIES_URL = "https://libproxy-db.org/proxies.json";
+  let allProxies = null;
+
+  const modal       = document.getElementById("institution-modal");
+  const instSearch  = document.getElementById("inst-search");
+  const instResults = document.getElementById("inst-results");
+  const instHint    = document.getElementById("inst-hint");
+
+  async function loadProxies() {
+    if (allProxies) return allProxies;
+    instHint.textContent = "Loading institution list…";
+    const res  = await fetch(PROXIES_URL);
+    allProxies = await res.json();
+    instHint.textContent = allProxies.length + " institutions. Type to search.";
+    return allProxies;
+  }
+
+  function proxyToSourceUrl(rawUrl) {
+    return rawUrl.replace(/\$@|\$URL|\$url|\$\{url\}/g, "{DOI_URL}");
+  }
+
+  function renderInstResults(query) {
+    const q = query.trim().toLowerCase();
+    if (!q) { instResults.innerHTML = ""; return; }
+    const matches = allProxies
+      .filter(p => p.name.toLowerCase().includes(q) || (p.country || "").toLowerCase().includes(q))
+      .slice(0, 40);
+    instResults.innerHTML = "";
+    if (!matches.length) {
+      instResults.innerHTML = "<li class='inst-result inst-result--empty'>No matches</li>";
+      return;
+    }
+    matches.forEach(proxy => {
+      const li   = document.createElement("li");
+      li.className = "inst-result";
+      const name = document.createElement("span");
+      name.className = "inst-result__name";
+      name.textContent = proxy.name;
+      const meta = document.createElement("span");
+      meta.className = "inst-result__meta";
+      meta.textContent = proxy.url || "";
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "inst-result__add";
+      btn.textContent = "Add";
+      btn.addEventListener("click", () => {
+        state.sources.push({
+          id: "inst-" + Date.now().toString(36),
+          emoji: nextEmoji(),
+          name: proxy.name,
+          url: proxyToSourceUrl(proxy.url),
+          enabled: true
+        });
+        save(); renderSources();
+        btn.textContent = "✓ Added";
+        btn.disabled    = true;
+      });
+      li.append(name, meta, btn);
+      instResults.appendChild(li);
+    });
+  }
+
+  function openModal() {
+    modal.hidden = false;
+    instSearch.value = "";
+    instResults.innerHTML = "";
+    instSearch.focus();
+    loadProxies()
+      .then(() => { if (instSearch.value) renderInstResults(instSearch.value); })
+      .catch(e => { instHint.textContent = "Failed to load: " + e.message; });
+  }
+  function closeModal() { modal.hidden = true; }
+
+  document.getElementById("modal-close").addEventListener("click", closeModal);
+  modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+  instSearch.addEventListener("input", () => { if (allProxies) renderInstResults(instSearch.value); });
+
+  // ── Event listeners ───────────────────────────────────────────────────────────
+
+  els.wikiLang.addEventListener("change", () => { state.wikipedia.lang = els.wikiLang.value; save(); });
+  els.showBadge.addEventListener("change", () => { state.wikipedia.showBadge = els.showBadge.checked; save(); });
+  els.scanBare.addEventListener("change", () => { state.behaviour.scanBareText = els.scanBare.checked; save(); });
+
+  els.refreshUrls.addEventListener("click", refreshUrls);
+  els.addInstitution.addEventListener("click", openModal);
+
+  const EMOJI_SEQUENCE = ["🏛️","🗝️","📚","📗","🗃️","📜","📘","📰","📕","🗄️","📙","📑"];
+  function nextEmoji() {
+    const used = new Set(state.sources.map(s => s.emoji));
+    return EMOJI_SEQUENCE.find(e => !used.has(e)) || "🔗";
+  }
+
+  els.addSource.addEventListener("click", () => {
+    state.sources.push({
+      id: "custom-" + Date.now().toString(36),
+      emoji: nextEmoji(), name: "New source",
+      url: "https://example.com/?q={DOI}", enabled: true
+    });
+    save(); renderSources();
+  });
+
+  els.reset.addEventListener("click", () => {
+    if (!confirm("Reset all settings to defaults?")) return;
+    state = structuredClone(self.DEFAULT_SETTINGS);
+    save(); render();
+  });
+  render();
+  load().then(render);
+})();
