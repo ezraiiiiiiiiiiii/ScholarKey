@@ -12,7 +12,7 @@ A Firefox extension that automatically loads shadow library and institutional ac
 
 3. **Adding your library**:
    - Click "+ Add your institution"
-   - Search for your institution (database by libproxy)
+   - Search for your institution ([database by libproxy](https://github.com/tom5760/ezproxy-db), maintained by [Tom Wambold](https://github.com/tom5760))
    - If possible, the extension will pull your institution's favicon. Otherwise, an emoji.
 
 4. **Managing Sources**:
@@ -30,3 +30,5 @@ A Firefox extension that automatically loads shadow library and institutional ac
 ## License
 
 MIT
+
+Special thanks to Tom Wambold and his libproxy-db, without whom this extension's features would be pretty lackluster.
