@@ -10,17 +10,26 @@
     <h1>ScholarKey</h1>
   </header>
 
+  <div id="perm-banner" class="perm-banner" hidden>
+    <p class="perm-banner__text">
+      <em>ScholarKey needs permission to read pages so it can find DOIs and add the
+      citation badges. Without it, no badges will appear.</em>
+    </p>
+    <button type="button" id="perm-grant" class="btn perm-banner__btn">Grant access to all sites</button>
+    <p class="perm-banner__note">After granting, reload any open tabs you want badges on.</p>
+  </div>
+
   <section class="section">
-    <p class="section__label">Access sources</p>
+    <h2 class="section__label">Access sources</h2>
     <ul id="sources" class="sources"></ul>
     <div class="actions">
-      <button type="button" id="add-institution" class="btn btn--ghost">🏛️ Add your institution</button>
-      <button type="button" id="add-source"      class="btn btn--ghost">+ Custom source</button>
+      <button type="button" id="add-institution" class="btn"><span class="btn__icon">🏛️</span>Add your institution</button>
+      <button type="button" id="add-source"      class="btn"><span class="btn__icon btn__icon--mark">+</span>Custom source</button>
     </div>
   </section>
 
   <section class="section">
-    <p class="section__label">Wikipedia badge</p>
+    <h2 class="section__label">Wikipedia badge</h2>
     <label class="field-row">
       <span class="field-row__label">Language</span>
       <select id="wiki-lang">
@@ -45,7 +54,7 @@
   </section>
 
   <section class="section">
-    <p class="section__label">Behavior</p>
+    <h2 class="section__label">Behavior</h2>
     <label class="field-row">
       <input type="checkbox" id="scan-bare">
       <span class="field-row__label">Scan bare-text DOIs (e.g. <code>10.1234/foo</code>)</span>
@@ -53,10 +62,10 @@
   </section>
 
   <section class="section">
-    <p class="section__label">Shadow library URLs</p>
+    <h2 class="section__label">Shadow library URLs</h2>
     <div class="refresh-row">
-      <button type="button" id="refresh-urls" class="btn btn--ghost">↻ Update</button>
-      <span class="refresh-info" title="Fetches latest URLs for Anna's Archive and Sci-Hub from their Wikipedia articles">ⓘ</span>
+      <button type="button" id="refresh-urls" class="btn"><span class="btn__icon btn__icon--mark">↻</span>Update from Wikipedia</button>
+      <span class="refresh-info" title="Fetches latest URLs for Anna's Archive and Sci-Hub from their Wikipedia articles">?</span>
       <span id="refresh-status" class="refresh-status"></span>
     </div>
   </section>
@@ -70,12 +79,19 @@
     <div class="modal__box">
       <div class="modal__header">
         <span class="modal__title">Add institution proxy</span>
-        <button type="button" id="modal-close" class="modal__close" aria-label="Close">✕</button>
+        <button type="button" id="modal-close" class="modal__close" aria-label="Close">×</button>
       </div>
-      <input type="search" id="inst-search" class="modal__search"
-             placeholder="Search by institution name or country…" autocomplete="off">
-      <p id="inst-hint" class="modal__hint">Loading…</p>
-      <ul id="inst-results" class="modal__results"></ul>
+      <div class="modal__body">
+        <input type="search" id="inst-search" class="modal__search"
+               placeholder="Search by institution name…" autocomplete="off">
+        <p id="inst-hint" class="modal__hint">Loading…</p>
+        <ul id="inst-results" class="modal__results"></ul>
+        <p class="modal__credit">
+          <em>Institution data from</em>
+          <a href="https://libproxy-db.org/" target="_blank" rel="noopener">libproxy-db.org</a>,
+          <em>maintained by Tom Wambold (</em><a href="https://github.com/tom5760" target="_blank" rel="noopener">tom5760</a><em>).</em>
+        </p>
+      </div>
     </div>
   </div>
 
