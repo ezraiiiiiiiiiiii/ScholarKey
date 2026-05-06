@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ScholarKey",
-  "version": "3.0",
+  "version": "3.4",
   "description": "Next to every DOI on the web: Wikipedia citation count and configurable access links.",
   "permissions": [
     "storage"
